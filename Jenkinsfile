@@ -1,45 +1,52 @@
 pipeline {
     agent any
-    
+
     environment {
-        AWS_DEFAULT_REGION = 'us-east-1'  // Change to your desired region
+        AWS_ACCESS_KEY_ID = credentials('your-aws-access-key-id')
+        AWS_SECRET_ACCESS_KEY = credentials('your-aws-secret-access-key')
+        AWS_DEFAULT_REGION = 'us-east-1' // Modify as needed
+        TF_CLI_ARGS = '-input=false -no-color' // Terraform CLI arguments
     }
-    
+
     stages {
-        stage('Checkout') {
+        stage('Checkout Code') {
             steps {
-                checkout scm
+                // Checkout your GitHub repository
+                checkout([$class: 'GitSCM', branches: [[name: '*/main']], userRemoteConfigs: [[url: 'https://github.com/sekhar334/terr-jen-s3.git']]])
             }
         }
-        
+
         stage('Terraform Init') {
             steps {
-                script {
-                    def tfHome = tool name: 'Terraform', type: 'org.jenkinsci.plugins.terraform.TerraformInstallation'
-                    def tfCli = "${tfHome}/bin/terraform"
-                    sh "${tfCli} init"
-                }
+                // Initialize Terraform
+                sh 'terraform init'
             }
         }
-        
+
+        stage('Terraform Plan') {
+            steps {
+                // Create a Terraform plan
+                sh 'terraform plan -out=tfplan'
+            }
+        }
+
         stage('Terraform Apply') {
             steps {
-                script {
-                    def tfHome = tool name: 'Terraform', type: 'org.jenkinsci.plugins.terraform.TerraformInstallation'
-                    def tfCli = "${tfHome}/bin/terraform"
-                    sh "${tfCli} apply -auto-approve"
-                }
+                // Apply the Terraform plan
+                sh 'terraform apply -auto-approve tfplan'
+            }
+        }
+
+        stage('Cleanup') {
+            steps {
+                // Optionally, you can perform cleanup tasks here
             }
         }
     }
-    
+
     post {
         always {
-            script {
-                def tfHome = tool name: 'Terraform', type: 'org.jenkinsci.plugins.terraform.TerraformInstallation'
-                def tfCli = "${tfHome}/bin/terraform"
-                sh "${tfCli} destroy -auto-approve"  // Cleanup resources after the job
-            }
+            // Archive artifacts, send notifications, or perform other post-build actions here
         }
     }
 }
