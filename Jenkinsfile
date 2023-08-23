@@ -2,8 +2,8 @@ pipeline {
     agent any
 
     environment {
-        AWS_ACCESS_KEY_ID = credentials('your-aws-access-key-id')
-        AWS_SECRET_ACCESS_KEY = credentials('your-aws-secret-access-key')
+        AWS_ACCESS_KEY_ID = credentials('AKIA4YR4DHRSDKIG4WNG')
+        AWS_SECRET_ACCESS_KEY = credentials('ozwua8zRhrqQ228YKEJDqjyAfO07pHMsjd/7Zx60')
         AWS_DEFAULT_REGION = 'us-east-1' // Modify as needed
         TF_CLI_ARGS = '-input=false -no-color' // Terraform CLI arguments
     }
