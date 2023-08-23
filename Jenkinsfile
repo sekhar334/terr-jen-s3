@@ -1,10 +1,13 @@
 pipeline {
     agent any
- 
+    
+    environment {
+        AWS_DEFAULT_REGION = 'us-east-1'  // Change to your desired region
+    }
+    
     stages {
         stage('Checkout') {
             steps {
-                // Checkout code from the GitHub repository
                 checkout scm
             }
         }
@@ -12,33 +15,31 @@ pipeline {
         stage('Terraform Init') {
             steps {
                 script {
-                    // Initialize Terraform
-                    sh 'terraform init'
+                    def tfHome = tool name: 'Terraform', type: 'org.jenkinsci.plugins.terraform.TerraformInstallation'
+                    def tfCli = "${tfHome}/bin/terraform"
+                    sh "${tfCli} init"
                 }
             }
         }
- 
+        
         stage('Terraform Apply') {
             steps {
                 script {
-                    // Apply Terraform changes (create S3 bucket)
-                    sh 'terraform apply -auto-approve'
+                    def tfHome = tool name: 'Terraform', type: 'org.jenkinsci.plugins.terraform.TerraformInstallation'
+                    def tfCli = "${tfHome}/bin/terraform"
+                    sh "${tfCli} apply -auto-approve"
                 }
             }
         }
     }
     
     post {
-        success {
-            stage('Terraform Cleanup') {
-                steps {
-                    script {
-                        // Clean up Terraform workspace after success
-                        sh 'terraform destroy -auto-approve'
-                    }
-                }
+        always {
+            script {
+                def tfHome = tool name: 'Terraform', type: 'org.jenkinsci.plugins.terraform.TerraformInstallation'
+                def tfCli = "${tfHome}/bin/terraform"
+                sh "${tfCli} destroy -auto-approve"  // Cleanup resources after the job
             }
         }
     }
 }
-
